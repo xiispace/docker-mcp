@@ -1,0 +1,18 @@
+version: "3"
+
+services:
+  mcp-docker-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mcp-docker-server
+    ports:
+      - "3000:3000"
+    environment:
+      - MCP_TRANSPORT=sse
+      - MCP_PORT=3000
+      # Uncomment and set a secure token to enable authentication
+      # - MCP_AUTH_TOKEN=your_secure_token_here
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
