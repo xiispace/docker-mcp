@@ -118,7 +118,7 @@ wheels = [
 ]
 
 [[package]]
-name = "docker-mcp-server"
+name = "docker-mcp"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

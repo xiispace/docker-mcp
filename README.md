@@ -59,19 +59,13 @@ curl -sSf https://astral.sh/uv/install.sh | sh
 2. Install dependencies using uv:
 
 ```bash
-uv pip install -e .
+uv sync
 ```
 
 3. Run the server:
 
 ```bash
-python server.py
-```
-
-Alternatively, you can use uv to run the server directly:
-
-```bash
-uv run python server.py
+uv run server.py
 ```
 
 ## Configuration
