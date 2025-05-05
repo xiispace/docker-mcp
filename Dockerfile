@@ -1,8 +1,14 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
+
+# Set environment variables for uv
+ENV UV_LINK_MODE=copy
+ENV UV_COMPILE_BYTECODE=1
 
 WORKDIR /app
 
-# Install Docker CLI and uv
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Install Docker CLI
 RUN apt-get update && \
     apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release && \
     mkdir -p /etc/apt/keyrings && \
@@ -13,28 +19,21 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install uv
-RUN curl -sSf https://astral.sh/uv/install.sh | sh
+# Install uv using the official method
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Copy project files
-COPY pyproject.toml .
-# Install dependencies using uv
-RUN uv pip install -e .
+# Copy project files and install dependencies
+COPY pyproject.toml uv.lock* ./
+RUN uv sync --frozen --no-install-project
 
 # Copy server code
 COPY server.py .
 
-# Make server.py executable
-RUN chmod +x server.py
-
 # Set environment variables
-ENV MCP_TRANSPORT=sse
-ENV MCP_PORT=3000
+# ENV MCP_PORT=3000
 # Optional: Set authentication token (uncomment and set a secure token to enable authentication)
 # ENV MCP_AUTH_TOKEN=your_secure_token_here
 
-# Expose the port
-EXPOSE 3000
 
-# Run the server
+# Run the server using the virtual environment's Python
 CMD ["python", "server.py"]
