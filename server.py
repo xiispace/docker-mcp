@@ -395,7 +395,8 @@ def docker_help() -> str:
 
 
 if __name__ == "__main__":
-    # Get transport type from environment variable or default to sse
-    transport_type = os.environ.get("MCP_TRANSPORT", "sse")
-
-    mcp.run(transport=transport_type)
+    if os.environ.get("MCP_PORT"):
+        transport = "sse"
+    else:
+        transport = "stdio"
+    mcp.run(transport=transport)

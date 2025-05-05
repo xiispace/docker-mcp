@@ -39,14 +39,14 @@ docker build -t mcp-docker-server .
 2. Run the container:
 
 ```bash
-# Run server without token authentication
-docker run -d -p 3000:3000 -v /var/run/docker.sock:/var/run/docker.sock --name mcp-docker-server mcp-docker-server
+# Run server with SSE transport (no authentication)
+docker run -d -p 3000:3000 -v /var/run/docker.sock:/var/run/docker.sock -e MCP_PORT=3000 --name mcp-docker-server mcp-docker-server
 
-# Run server with token authentication
-docker run -d -p 3000:3000 -v /var/run/docker.sock:/var/run/docker.sock -e MCP_AUTH_TOKEN=your_secret_token --name mcp-docker-server mcp-docker-server
+# Run server with SSE transport and token authentication
+docker run -d -p 3000:3000 -v /var/run/docker.sock:/var/run/docker.sock -e MCP_PORT=3000 -e MCP_AUTH_TOKEN=your_secret_token --name mcp-docker-server mcp-docker-server
 ```
 
-When the `MCP_AUTH_TOKEN` environment variable is set, the server will enable token authentication. Clients need to access the server through the `/sse/your_secret_token` path. If the token doesn't match or is not provided, the connection will be rejected.
+When the `MCP_PORT` environment variable is set, the server will use the SSE transport instead of stdio. Authentication is only applicable when using SSE transport. If the `MCP_AUTH_TOKEN` environment variable is set, the server will enable token authentication and configure the SSE endpoint to use the format `/sse/{token}` where `{token}` must match the value set in `MCP_AUTH_TOKEN`. If the token doesn't match or is not provided, the connection will be rejected. If no token is set, the server uses the standard `/sse` endpoint without authentication.
 
 ### Running locally (development)
 
@@ -65,19 +65,26 @@ uv sync
 3. Run the server:
 
 ```bash
+# Run with stdio transport (default)
 uv run server.py
+
+# Run with SSE transport on port 8000
+MCP_PORT=8000 uv run server.py
+
+# Run with SSE transport and token authentication
+MCP_PORT=8000 MCP_AUTH_TOKEN=your_secret_token uv run server.py
 ```
 
 ## Configuration
 
 The server can be configured using environment variables:
 
-- `MCP_TRANSPORT`: Transport method (default: `sse`)
-- `MCP_PORT`: Port to listen on (default: `3000`)
+- `MCP_PORT`: When set, enables SSE transport mode and specifies the port to listen on (default: `8000`). If not set, the server will use stdio transport.
+- `MCP_AUTH_TOKEN`: Secret token for authentication (only applicable when using SSE transport). When set, the SSE endpoint will be `/sse/{token}` instead of `/sse`
 
-## Using with Claude Desktop
+## Using with MCP clients
 
-Add the following configuration to your `claude_desktop_config.json` file:
+Should build the docker image first.
 
 ```json
 {
@@ -92,30 +99,6 @@ Add the following configuration to your `claude_desktop_config.json` file:
         "/var/run/docker.sock:/var/run/docker.sock",
         "mcp-docker-server"
       ]
-    }
-  }
-}
-```
-
-## Using with VS Code
-
-Add the following configuration to your VS Code settings or `.vscode/mcp.json` file:
-
-```json
-{
-  "mcp": {
-    "servers": {
-      "docker": {
-        "command": "docker",
-        "args": [
-          "run",
-          "-i",
-          "--rm",
-          "-v",
-          "/var/run/docker.sock:/var/run/docker.sock",
-          "mcp-docker-server"
-        ]
-      }
     }
   }
 }
