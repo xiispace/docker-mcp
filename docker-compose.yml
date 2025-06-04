@@ -13,6 +13,11 @@ services:
       - MCP_PORT=3000
       # Uncomment and set a secure token to enable authentication
       # - MCP_AUTH_TOKEN=your_secure_token_here
+      # Hostname for Docker containers (default: localhost if not set)
+      - MCP_HOSTNAME=localhost
+      # Available ports for Docker containers (comma-separated list of ports or port ranges)
+      # Example: "8000,8080-8090,9000"
+      - MCP_AVAILABLE_PORTS=3001-3010,8080-8090,9000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped

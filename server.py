@@ -17,6 +17,25 @@ from mcp.server.fastmcp.prompts import base
 # Get authentication token from environment variable or use None (no authentication)
 AUTH_TOKEN = os.environ.get("MCP_AUTH_TOKEN")
 
+# Get hostname configuration from environment variable or use localhost as default
+HOSTNAME = os.environ.get("MCP_HOSTNAME", "localhost")
+
+# Get available ports configuration from environment variable
+# Format: comma-separated list of ports or port ranges (e.g. "8000,8080-8090,9000")
+AVAILABLE_PORTS_STR = os.environ.get("MCP_AVAILABLE_PORTS", "")
+
+# Parse available ports configuration
+AVAILABLE_PORTS = []
+if AVAILABLE_PORTS_STR:
+    for port_item in AVAILABLE_PORTS_STR.split(","):
+        if "-" in port_item:
+            # Handle port range
+            start, end = port_item.split("-")
+            AVAILABLE_PORTS.extend(range(int(start), int(end) + 1))
+        else:
+            # Handle single port
+            AVAILABLE_PORTS.append(int(port_item))
+
 sse_path = "/sse/{token}" if AUTH_TOKEN else "/sse"
 
 # Create an MCP server
@@ -170,6 +189,10 @@ async def docker_run(
             for port_mapping in ports:
                 if ":" in port_mapping:
                     host_port, container_port = port_mapping.split(":", 1)
+                    # Validate host port against available ports if configured
+                    if AVAILABLE_PORTS and int(host_port) not in AVAILABLE_PORTS:
+                        return f"Error: Host port {host_port} is not in the list of available ports"
+                    
                     # Handle protocol specification (tcp/udp)
                     if "/" not in container_port:
                         # Default to TCP if no protocol is specified
@@ -180,6 +203,8 @@ async def docker_run(
                     container_port = port_mapping
                     if "/" not in container_port:
                         container_port = f"{container_port}/tcp"
+                    # For auto-assigned ports, we can't validate against available ports
+                    # Docker will choose an available port
                     port_bindings[container_port] = None
 
         # Convert volumes from list format to dict format for docker-py
@@ -228,7 +253,7 @@ async def docker_run(
         )
 
         if detach:
-            return f"Container started: {container.id[:12]}"
+            return f"Container started: {container.id[:12]} with hostname: {HOSTNAME}"
         else:
             return container.logs().decode("utf-8")
     except docker.errors.ImageNotFound:
@@ -375,6 +400,18 @@ async def get_container_info(container_id: str) -> str:
         return f"Error: No such container: {container_id}"
     except docker.errors.APIError as e:
         return f"Error: {str(e)}"
+
+
+@mcp.resource("docker://config/hostname")
+async def get_hostname() -> str:
+    """Get the configured hostname for Docker containers."""
+    return json.dumps({"hostname": HOSTNAME})
+
+
+@mcp.resource("docker://config/available_ports")
+async def get_available_ports() -> str:
+    """Get the list of available ports for Docker containers."""
+    return json.dumps({"available_ports": AVAILABLE_PORTS})
 
 
 @mcp.prompt()

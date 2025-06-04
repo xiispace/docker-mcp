@@ -81,6 +81,8 @@ The server can be configured using environment variables:
 
 - `MCP_PORT`: When set, enables SSE transport mode and specifies the port to listen on (default: `8000`). If not set, the server will use stdio transport.
 - `MCP_AUTH_TOKEN`: Secret token for authentication (only applicable when using SSE transport). When set, the SSE endpoint will be `/sse/{token}` instead of `/sse`
+- `MCP_HOSTNAME`: Hostname to use for Docker containers (default: `localhost`). This can be a domain name or IP address that will be used to access Docker containers after they are created.
+- `MCP_AVAILABLE_PORTS`: Comma-separated list of ports or port ranges that are available for Docker containers to bind to (e.g., `8000,8080-8090,9000`). When specified, the server will validate that requested host ports are in this list.
 
 ## Using with MCP clients
 
@@ -120,6 +122,8 @@ Should build the docker image first.
 - `docker://containers`: Information about all containers
 - `docker://images`: Information about all images
 - `docker://container/{container_id}`: Detailed information about a specific container
+- `docker://config/hostname`: Get the configured hostname for Docker containers
+- `docker://config/available_ports`: Get the list of available ports for Docker containers
 
 ## TODO
 

@@ -33,6 +33,11 @@ COPY server.py .
 # ENV MCP_PORT=3000
 # Optional: Set authentication token (uncomment and set a secure token to enable authentication)
 # ENV MCP_AUTH_TOKEN=your_secure_token_here
+# Optional: Set hostname for Docker containers (default: localhost if not set)
+# ENV MCP_HOSTNAME=localhost
+# Optional: Set available ports for Docker containers (comma-separated list of ports or port ranges)
+# Example: "8000,8080-8090,9000"
+# ENV MCP_AVAILABLE_PORTS=3001-3010,8080-8090,9000
 
 
 # Run the server using the virtual environment's Python
